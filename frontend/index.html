@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&D 5e Rules Oracle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #09090f;
+      --panel:      #111118;
+      --border:     #252535;
+      --gold:       #c9a227;
+      --gold-dim:   #8a6f19;
+      --gold-glow:  rgba(201,162,39,0.12);
+      --text:       #e0d4c0;
+      --muted:      #6e6458;
+      --user-bg:    #161622;
+      --chip-bg:    #191926;
+      --chip-hover: #242438;
+      --error:      #e05252;
+      --success:    #52c07a;
+      --radius:     10px;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    header {
+      padding: 0.75rem 1.25rem;
+      background: linear-gradient(180deg, #0d0d1a 0%, var(--panel) 100%);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .logo-icon { font-size: 1.7rem; line-height: 1; }
+
+    .logo-text h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+    }
+
+    .logo-text p {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 0.45rem;
+      align-items: center;
+    }
+
+    .icon-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      white-space: nowrap;
+    }
+
+    .icon-btn:hover {
+      color: var(--gold);
+      border-color: var(--gold-dim);
+      background: var(--gold-glow);
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.28rem 0.6rem;
+      border-radius: 20px;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+    .dot.online { background: var(--success); }
+    .dot.error  { background: var(--error); }
+
+    /* ── Chips ───────────────────────────────────────────────────────────── */
+    .chips-bar {
+      padding: 0.55rem 1rem;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 0.4rem;
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .chips-bar::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex-shrink: 0;
+      background: var(--chip-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-family: 'Crimson Pro', serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .chip:hover {
+      background: var(--chip-hover);
+      border-color: var(--gold-dim);
+      color: var(--gold);
+    }
+
+    /* ── Chat ────────────────────────────────────────────────────────────── */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      scroll-behavior: smooth;
+    }
+
+    #chat::-webkit-scrollbar { width: 4px; }
+    #chat::-webkit-scrollbar-track { background: transparent; }
+    #chat::-webkit-scrollbar-thumb { background: #252535; border-radius: 2px; }
+
+    /* Welcome */
+    .welcome {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 0.7rem;
+      padding: 2rem;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+    .welcome .crest { font-size: 3.5rem; line-height: 1; }
+    .welcome h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      color: var(--gold);
+    }
+    .welcome p {
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 340px;
+      line-height: 1.55;
+    }
+
+    /* Messages */
+    .message {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-width: 840px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .message.user      { align-items: flex-end; }
+    .message.assistant { align-items: flex-start; }
+
+    .bubble {
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius);
+      line-height: 1.62;
+      font-size: 0.97rem;
+      max-width: 88%;
+    }
+
+    .user .bubble {
+      background: var(--user-bg);
+      border: 1px solid #2a2a40;
+      border-bottom-right-radius: 3px;
+      white-space: pre-wrap;
+    }
+
+    .assistant .bubble {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 3px;
+      width: 100%;
+    }
+
+    /* Markdown inside assistant bubble */
+    .bubble h1, .bubble h2, .bubble h3 {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      margin: 0.65rem 0 0.3rem;
+    }
+    .bubble h1 { font-size: 1.05rem; }
+    .bubble h2 { font-size: 0.98rem; }
+    .bubble h3 { font-size: 0.92rem; }
+    .bubble p  { margin: 0.3rem 0; }
+    .bubble p:first-child { margin-top: 0; }
+    .bubble p:last-child  { margin-bottom: 0; }
+    .bubble ul, .bubble ol { padding-left: 1.35rem; margin: 0.3rem 0; }
+    .bubble li { margin: 0.15rem 0; }
+    .bubble strong { color: #f0d878; font-weight: 600; }
+    .bubble em     { color: #c8b8a0; font-style: italic; }
+    .bubble code {
+      background: #1a1a28;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+      font-size: 0.86em;
+      font-family: monospace;
+      color: #a8c0e0;
+    }
+    .bubble blockquote {
+      border-left: 3px solid var(--gold-dim);
+      padding-left: 0.75rem;
+      color: var(--muted);
+      margin: 0.4rem 0;
+    }
+
+    /* Streaming cursor */
+    .streaming::after {
+      content: '▌';
+      color: var(--gold);
+      animation: blink 0.65s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Thinking dots */
+    .thinking {
+      display: flex;
+      gap: 5px;
+      padding: 0.4rem 0.1rem;
+    }
+    .thinking span {
+      width: 7px; height: 7px;
+      background: var(--gold-dim);
+      border-radius: 50%;
+      animation: throb 1.2s ease-in-out infinite;
+    }
+    .thinking span:nth-child(2) { animation-delay: 0.2s; }
+    .thinking span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes throb {
+      0%, 80%, 100% { transform: scale(0.65); opacity: 0.35; }
+      40%           { transform: scale(1.0);  opacity: 1.0;  }
+    }
+
+    /* Message footer (latency + sources toggle) */
+    .msg-footer {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0 0.15rem;
+    }
+
+    .latency {
+      font-size: 0.68rem;
+      color: #35354a;
+    }
+
+    .sources-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .sources-btn:hover { color: var(--gold); }
+
+    /* Sources panel */
+    .sources-panel {
+      background: #0c0c14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.77rem;
+      color: var(--muted);
+      line-height: 1.5;
+      display: none;
+      width: 100%;
+    }
+    .sources-panel.open { display: block; }
+
+    .source-item {
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #1a1a28;
+    }
+    .source-item:last-child { border-bottom: none; }
+
+    .source-meta {
+      color: var(--gold-dim);
+      font-size: 0.72rem;
+      margin-bottom: 0.2rem;
+    }
+    .source-snippet {
+      color: #5a5048;
+      font-style: italic;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ── Input ───────────────────────────────────────────────────────────── */
+    .input-bar {
+      padding: 0.7rem 1rem;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    #question {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      font-size: 1rem;
+      padding: 0.55rem 0.85rem;
+      resize: none;
+      min-height: 42px;
+      max-height: 150px;
+      line-height: 1.5;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #question:focus { border-color: var(--gold-dim); }
+    #question::placeholder { color: var(--muted); }
+    #question:disabled { opacity: 0.5; }
+
+    #send-btn {
+      background: linear-gradient(135deg, #9a7218, var(--gold));
+      border: none;
+      color: #120d00;
+      padding: 0 1.1rem;
+      border-radius: 8px;
+      height: 42px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+      transition: filter 0.15s, transform 0.15s;
+    }
+    #send-btn:hover:not(:disabled) {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+    }
+    #send-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Settings modal ──────────────────────────────────────────────────── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      width: min(430px, 93vw);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+
+    .modal h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .field { margin-bottom: 1rem; }
+
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.35rem;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.75rem;
+      border-radius: 7px;
+      font-family: monospace;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--gold-dim); }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 0.35rem;
+    }
+
+    code.inline {
+      background: #1a1a28;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-family: monospace;
+    }
+
+    .test-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.75rem 0 0;
+    }
+
+    .test-status {
+      font-size: 0.78rem;
+    }
+    .test-status.ok   { color: var(--success); }
+    .test-status.fail { color: var(--error);   }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1.25rem;
+    }
+
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.42rem 0.9rem;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+    .btn-gold {
+      background: var(--gold);
+      border: none;
+      color: #120d00;
+      padding: 0.42rem 1rem;
+      border-radius: 7px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+    .btn-gold:hover { filter: brightness(1.1); }
+
+    /* ── Error bubble ────────────────────────────────────────────────────── */
+    .error-bubble {
+      background: #1a0a0a;
+      border: 1px solid #3a1515;
+      color: #e07070;
+      border-radius: var(--radius);
+      padding: 0.65rem 1rem;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 560px) {
+      header { padding: 0.65rem 0.85rem; }
+      .logo-text p { display: none; }
+      #chat { padding: 0.9rem 0.75rem; }
+      .bubble { max-width: 96%; }
+      .status-pill span:last-child { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <span class="logo-icon">🐉</span>
+    <div class="logo-text">
+      <h1>D&D 5e Rules Oracle</h1>
+      <p>Llama 3.3 70B · SRD 2024 · RAG-powered</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill">
+      <span class="dot" id="dot"></span>
+      <span id="status-label">checking…</span>
+    </div>
+    <button class="icon-btn" onclick="openSettings()">⚙ API</button>
+    <button class="icon-btn" onclick="clearChat()">✕ Clear</button>
+  </div>
+</header>
+
+<!-- ── Quick chips ─────────────────────────────────────────────────────────── -->
+<div class="chips-bar" id="chips-bar"></div>
+
+<!-- ── Chat ───────────────────────────────────────────────────────────────── -->
+<div id="chat">
+  <div class="welcome" id="welcome">
+    <div class="crest">⚔️</div>
+    <h2>Consult the Oracle</h2>
+    <p>Ask any D&D 5e 2024 rules question. The oracle searches the full SRD and cites its sources.</p>
+  </div>
+</div>
+
+<!-- ── Input bar ──────────────────────────────────────────────────────────── -->
+<div class="input-bar">
+  <textarea id="question" placeholder="Ask a rules question… (Enter to send · Shift+Enter for new line)" rows="1"></textarea>
+  <button id="send-btn" onclick="send()">Cast ⚡</button>
+</div>
+
+<!-- ── Settings modal ─────────────────────────────────────────────────────── -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <h2>⚙ Oracle Configuration</h2>
+
+    <div class="field">
+      <label>API URL</label>
+      <input type="url" id="api-input" placeholder="https://your-app.railway.app" />
+      <p class="hint">
+        Local dev: <code class="inline">http://localhost:8000</code><br>
+        Production: your Railway deployment URL
+      </p>
+    </div>
+
+    <div class="test-row">
+      <button class="btn-ghost" onclick="testConn()">Test connection</button>
+      <span class="test-status" id="test-status"></span>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeSettings()">Cancel</button>
+      <button class="btn-gold" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script>
+// ── Constants ────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'dnd-oracle-api';
+const DEFAULT_URL  = 'http://localhost:8000';
+
+const CHIPS = [
+  'How does grappling work?',
+  'What are the conditions and their effects?',
+  'What actions can I take on my turn?',
+  'How does concentration work?',
+  'How do death saving throws work?',
+  'What is the Dodge action?',
+  'How does advantage and disadvantage work?',
+  'What is a reaction?',
+  'How do spell slots work?',
+  'What are the rules for hiding?',
+  'How does exhaustion work?',
+  'What is the Help action?',
+];
+
+// ── State ────────────────────────────────────────────────────────────────────
+let apiUrl    = localStorage.getItem(STORAGE_KEY) || DEFAULT_URL;
+let streaming = false;
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildChips();
+
+  const ta = document.getElementById('question');
+  ta.addEventListener('input', () => resize(ta));
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+
+  checkStatus();
+  if (!localStorage.getItem(STORAGE_KEY)) openSettings();
+});
+
+// ── Quick chips ───────────────────────────────────────────────────────────────
+function buildChips() {
+  const bar = document.getElementById('chips-bar');
+  bar.innerHTML = CHIPS.map(q =>
+    `<button class="chip" onclick="chipClick(${JSON.stringify(q)})">${q}</button>`
+  ).join('');
+}
+
+function chipClick(q) {
+  if (streaming) return;
+  document.getElementById('question').value = q;
+  send();
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+function removeWelcome() {
+  document.getElementById('welcome')?.remove();
+}
+
+function addUserBubble(text) {
+  removeWelcome();
+  appendMessage('user', `<div class="bubble">${esc(text)}</div>`);
+}
+
+function addThinking() {
+  removeWelcome();
+  const div = document.createElement('div');
+  div.className = 'message assistant';
+  div.id = 'thinking';
+  div.innerHTML = `<div class="bubble"><div class="thinking"><span></span><span></span><span></span></div></div>`;
+  document.getElementById('chat').appendChild(div);
+  scroll();
+}
+
+function removeThinking() {
+  document.getElementById('thinking')?.remove();
+}
+
+function startAssistantBubble() {
+  removeThinking();
+  const div = document.createElement('div');
+  div.className = 'message assistant';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble streaming';
+  bubble.dataset.raw = '';
+  div.appendChild(bubble);
+  document.getElementById('chat').appendChild(div);
+  scroll();
+  return div;
+}
+
+function appendToken(msgDiv, token) {
+  const bubble = msgDiv.querySelector('.bubble');
+  bubble.dataset.raw += token;
+  bubble.innerHTML = marked.parse(bubble.dataset.raw);
+  scroll();
+}
+
+function finalise(msgDiv, sources, latencyMs) {
+  const bubble = msgDiv.querySelector('.bubble');
+  bubble.classList.remove('streaming');
+  if (bubble.dataset.raw) bubble.innerHTML = marked.parse(bubble.dataset.raw);
+
+  const footer = document.createElement('div');
+  footer.className = 'msg-footer';
+
+  if (latencyMs) {
+    const lat = document.createElement('span');
+    lat.className = 'latency';
+    lat.textContent = `${(latencyMs / 1000).toFixed(1)}s`;
+    footer.appendChild(lat);
+  }
+
+  if (sources?.length) {
+    const btn = document.createElement('button');
+    btn.className = 'sources-btn';
+    btn.innerHTML = `▾ ${sources.length} source${sources.length > 1 ? 's' : ''}`;
+
+    const panel = document.createElement('div');
+    panel.className = 'sources-panel';
+    panel.innerHTML = sources.map((s, i) => `
+      <div class="source-item">
+        <div class="source-meta">
+          [${i + 1}] ${esc(s.section || 'Unknown')} &middot; p.${s.page || '?'}
+          ${s.rerank_score != null ? ` &middot; score ${(+s.rerank_score).toFixed(2)}` : ''}
+        </div>
+        <div class="source-snippet">${esc((s.content || '').slice(0, 220))}</div>
+      </div>`
+    ).join('');
+
+    btn.addEventListener('click', () => {
+      const open = panel.classList.toggle('open');
+      btn.innerHTML = `${open ? '▴' : '▾'} ${sources.length} source${sources.length > 1 ? 's' : ''}`;
+    });
+
+    footer.appendChild(btn);
+    msgDiv.appendChild(footer);
+    msgDiv.appendChild(panel);
+  } else {
+    msgDiv.appendChild(footer);
+  }
+}
+
+function addError(text) {
+  removeThinking();
+  appendMessage('assistant', `<div class="error-bubble">⚠ ${esc(text)}</div>`);
+}
+
+function appendMessage(role, html) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+  div.innerHTML = html;
+  chat.appendChild(div);
+  scroll();
+}
+
+function clearChat() {
+  document.getElementById('chat').innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="crest">⚔️</div>
+      <h2>Consult the Oracle</h2>
+      <p>Ask any D&D 5e 2024 rules question. The oracle searches the full SRD and cites its sources.</p>
+    </div>`;
+}
+
+function scroll() {
+  const c = document.getElementById('chat');
+  c.scrollTop = c.scrollHeight;
+}
+
+// ── Send / stream ─────────────────────────────────────────────────────────────
+async function send() {
+  if (streaming) return;
+
+  const ta = document.getElementById('question');
+  const q  = ta.value.trim();
+  if (!q) return;
+
+  ta.value = '';
+  resize(ta);
+
+  streaming = true;
+  lock(true);
+
+  addUserBubble(q);
+  addThinking();
+
+  let msgDiv = null;
+
+  try {
+    const resp = await fetch(`${apiUrl}/query/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q, use_hyde: true }),
+      signal: AbortSignal.timeout(120_000),
+    });
+
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => resp.statusText);
+      throw new Error(`${resp.status} — ${body.slice(0, 120)}`);
+    }
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    let sources = [], latencyMs = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const json = line.slice(6).trim();
+        if (!json) continue;
+        let evt;
+        try { evt = JSON.parse(json); } catch { continue; }
+
+        if (evt.type === 'start') {
+          msgDiv  = startAssistantBubble();
+          sources = evt.sources || [];
+        } else if (evt.type === 'token') {
+          if (!msgDiv) msgDiv = startAssistantBubble();
+          appendToken(msgDiv, evt.content);
+        } else if (evt.type === 'end') {
+          latencyMs = evt.latency_ms;
+        }
+      }
+    }
+
+    if (msgDiv) finalise(msgDiv, sources, latencyMs);
+
+  } catch (err) {
+    if (err.name === 'TimeoutError') {
+      addError('The oracle timed out. If the API just woke from sleep, try again in 30 seconds.');
+    } else {
+      addError(err.message);
+    }
+  } finally {
+    streaming = false;
+    lock(false);
+    checkStatus();
+    document.getElementById('question').focus();
+  }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('api-input').value = apiUrl;
+  document.getElementById('test-status').textContent = '';
+  document.getElementById('test-status').className = 'test-status';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeSettings();
+}
+
+function saveSettings() {
+  const v = document.getElementById('api-input').value.trim().replace(/\/$/, '');
+  apiUrl = v || DEFAULT_URL;
+  localStorage.setItem(STORAGE_KEY, apiUrl);
+  closeSettings();
+  checkStatus();
+}
+
+async function testConn() {
+  const url = document.getElementById('api-input').value.trim().replace(/\/$/, '') || apiUrl;
+  const el  = document.getElementById('test-status');
+  el.textContent = 'testing…';
+  el.className   = 'test-status';
+  try {
+    const r = await fetch(`${url}/health`, { signal: AbortSignal.timeout(10_000) });
+    const d = await r.json();
+    el.textContent = `✓ Connected · ${d.document_count ?? '?'} docs in Qdrant`;
+    el.className   = 'test-status ok';
+  } catch (e) {
+    el.textContent = `✗ ${e.message}`;
+    el.className   = 'test-status fail';
+  }
+}
+
+// ── Status pill ───────────────────────────────────────────────────────────────
+async function checkStatus() {
+  const dot   = document.getElementById('dot');
+  const label = document.getElementById('status-label');
+  try {
+    const r = await fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(5_000) });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    dot.className   = 'dot online';
+    label.textContent = `${d.document_count ?? '?'} docs`;
+  } catch {
+    dot.className   = 'dot error';
+    label.textContent = 'offline';
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function lock(on) {
+  document.getElementById('send-btn').disabled = on;
+  document.getElementById('question').disabled = on;
+}
+
+function resize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

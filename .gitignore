@@ -1,0 +1,37 @@
+# Env
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Data (don't commit large PDFs or processed chunks)
+data/raw/*.pdf
+data/processed/
+
+# Eval outputs
+eval_results/
+
+# Model cache (sentence-transformers downloads here)
+.cache/
+models/
+
+# Qdrant local storage (managed by Docker)
+qdrant_storage/
+
+# Notebooks
+notebooks/.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
