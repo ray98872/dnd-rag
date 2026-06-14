@@ -813,7 +813,7 @@ async function send() {
     const resp = await fetch(`${apiUrl}/query/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: q, use_hyde: true }),
+      body: JSON.stringify({ question: q, use_hyde: false }),
       signal: AbortSignal.timeout(120_000),
     });
 
