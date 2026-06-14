@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="D&D 5e Rules Oracle — a production RAG system over the 2024 SRD. Hybrid dense + sparse retrieval, cross-encoder reranking, streaming Llama 3.3 70B generation and RAGAS evaluation." />
+<title>D&D 5e Rules Oracle — Ray Mahbub</title>
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="%230a0a0b"/><text x="5" y="23" font-family="Georgia, serif" font-style="italic" font-size="17" fill="%23c97e4e">rm</text></svg>' />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,300..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#0a0a0b; --cream:#f2f0ea; --faint:#98948a; --dim:#5b574e;
+  --copper:#c97e4e; --copper-soft:#e0a075; --line:rgba(242,240,234,.08);
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--cream);
+  font-family:"Inter",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+.halo{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 45% at 50% -5%,rgba(201,126,78,.07),transparent)}
+.wrap{position:relative;max-width:1060px;margin:0 auto;padding:0 22px}
+header{display:flex;align-items:center;justify-content:space-between;padding:26px 0}
+.wordmark{font-family:"Fraunces",Georgia,serif;font-style:italic;font-size:18px;color:var(--cream);text-decoration:none}
+header nav a{color:var(--faint);text-decoration:none;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-left:22px;transition:color .3s}
+header nav a:hover{color:var(--copper-soft)}
+.hero{padding:64px 0 40px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:rgba(242,240,234,.04);border-radius:999px;padding:6px 14px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--copper);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(201,126,78,.5)}50%{box-shadow:0 0 0 5px rgba(201,126,78,0)}}
+h1{font-size:clamp(2.1rem,5.5vw,3.6rem);font-weight:600;letter-spacing:-.02em;line-height:1.06;margin:20px 0 16px;max-width:780px}
+h1 em{font-family:"Fraunces",Georgia,serif;font-weight:300;color:var(--copper)}
+.lede{color:var(--faint);max-width:660px;font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:42px 0 8px}
+.stat{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:linear-gradient(180deg,rgba(242,240,234,.045),rgba(242,240,234,.018))}
+.stat b{display:block;font-size:24px;font-weight:600;color:var(--cream)}
+.stat span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+section{padding:54px 0 8px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:26px}
+.sec-head i{font-family:"Fraunces",Georgia,serif;font-style:italic;color:var(--copper);font-size:14px}
+.sec-head h2{font-size:12px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--faint)}
+.sec-head::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.card{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(242,240,234,.045),rgba(242,240,234,.018));box-shadow:0 -24px 70px -32px rgba(242,240,234,.07) inset;padding:24px;transition:border-color .35s var(--ease),transform .35s var(--ease)}
+.card:hover{border-color:rgba(201,126,78,.35);transform:translateY(-3px)}
+.diagram{padding:14px}
+.diagram svg{width:100%;height:auto;display:block}
+.dlabel{font-family:"JetBrains Mono",monospace;font-size:11px;fill:var(--cream)}
+.dsub{font-family:"JetBrains Mono",monospace;font-size:9px;fill:#98948a}
+.dnote{font-family:"JetBrains Mono",monospace;font-size:9.5px;fill:#5b574e}
+.grid{display:grid;gap:14px}
+.two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.three{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.spec dt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:14px}
+.spec dt:first-child{margin-top:0}
+.spec dd{font-size:14px;color:var(--cream);margin-top:2px}
+.spec dd small{display:block;color:var(--faint);font-size:12.5px}
+.spec code{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--copper-soft)}
+.story{display:flex;gap:16px}
+.story i{font-family:"Fraunces",Georgia,serif;font-style:italic;color:var(--copper);font-size:15px;flex:none;padding-top:2px}
+.story h3{font-size:14.5px;font-weight:600}
+.story p{font-size:13px;color:var(--faint);margin-top:5px}
+.ops li{list-style:none;font-size:14px;color:var(--faint);padding:10px 0;border-top:1px solid var(--line);display:flex;gap:10px}
+.ops li:first-child{border-top:none}
+.ops li::before{content:"—";color:var(--copper);flex:none}
+.ops b{color:var(--cream);font-weight:500}
+/* Score bars */
+.score-card{border:1px solid var(--line);border-radius:16px;padding:20px 22px;background:linear-gradient(180deg,rgba(242,240,234,.045),rgba(242,240,234,.018))}
+.score-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.score-value{font-size:2.2rem;font-weight:600;color:var(--cream);margin:6px 0 10px;line-height:1}
+.score-bar-bg{height:5px;background:rgba(242,240,234,.06);border-radius:3px}
+.score-bar-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,#c97e4e,#e0a075);transition:width 1.2s var(--ease)}
+.score-note{font-size:12px;color:var(--faint);margin-top:8px}
+/* Chip links */
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip-link{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12px;color:var(--faint);text-decoration:none;transition:all .2s var(--ease);font-family:"JetBrains Mono",monospace}
+.chip-link:hover{border-color:rgba(201,126,78,.5);color:var(--copper-soft);background:rgba(201,126,78,.06)}
+.chip-link svg{width:13px;height:13px;flex-shrink:0}
+footer{margin-top:64px;border-top:1px solid var(--line);padding:26px 0 40px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--dim)}
+footer a{color:var(--faint);text-decoration:none}
+footer a:hover{color:var(--copper-soft)}
+.fade{opacity:0;transform:translateY(20px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.fade.in{opacity:1;transform:none}
+.flow{stroke-dasharray:3 5;animation:dash 1.4s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-16}}
+@media (prefers-reduced-motion:reduce){
+  .fade{opacity:1;transform:none;transition:none}
+  .dot{animation:none}
+  .flow{animation:none}
+  html{scroll-behavior:auto}
+  .card:hover{transform:none}
+  .score-bar-fill{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="halo" aria-hidden="true"></div>
+<div class="wrap">
+
+<header>
+  <a class="wordmark" href="https://ray98872.github.io">ray mahbub</a>
+  <nav>
+    <a href="#architecture">Architecture</a>
+    <a href="#ingestion">Ingestion</a>
+    <a href="#retrieval">Retrieval</a>
+    <a href="#eval">Evaluation</a>
+    <a href="#oracle">The Oracle</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <p class="pill"><span class="dot"></span> RAG · LLM · production</p>
+  <h1>A rules oracle for D&amp;D, <em>backed by the full SRD.</em></h1>
+  <p class="lede">A production-grade retrieval-augmented generation system over the D&amp;D 5e 2024 System Reference Document — 364 pages chunked, embedded, and indexed for hybrid retrieval, reranked by a cross-encoder, and answered in streaming by Llama 3.3 70B.</p>
+  <div class="stats">
+    <div class="stat fade"><b>3,435</b><span>vectors in Qdrant</span></div>
+    <div class="stat fade"><b>364</b><span>SRD pages ingested</span></div>
+    <div class="stat fade"><b>0.79</b><span>RAGAS faithfulness</span></div>
+    <div class="stat fade"><b>512</b><span>token chunk size</span></div>
+  </div>
+  <div class="chip-row">
+    <a class="chip-link" href="https://github.com/ray98872/dnd-rag" target="_blank" rel="noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      ray98872/dnd-rag
+    </a>
+    <a class="chip-link" href="https://ray98872.github.io/dnd-rag/" target="_blank" rel="noreferrer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+      Live Oracle
+    </a>
+    <a class="chip-link" href="https://huggingface.co/BAAI/bge-small-en-v1.5" target="_blank" rel="noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      BAAI/bge-small-en-v1.5
+    </a>
+    <a class="chip-link" href="https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2" target="_blank" rel="noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      cross-encoder/ms-marco-MiniLM-L-6-v2
+    </a>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="sec-head"><i>01</i><h2>Architecture</h2></div>
+  <div class="card diagram fade">
+    <svg viewBox="0 0 760 340" role="img" aria-label="RAG pipeline diagram: PDF ingestion feeds a chunker and embedder, which writes to Qdrant. At query time, the retriever runs dense and sparse search in parallel, a cross-encoder reranker scores results, and a Groq-hosted Llama 3.3 70B generates a streaming answer.">
+      <defs>
+        <marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5b574e"/></marker>
+        <marker id="ac" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c97e4e"/></marker>
+      </defs>
+
+      <!-- Labels -->
+      <text x="200" y="16" text-anchor="middle" class="dnote">ingestion (offline)</text>
+      <text x="560" y="16" text-anchor="middle" class="dnote">query (online)</text>
+      <line x1="380" y1="10" x2="380" y2="320" stroke="rgba(242,240,234,0.05)" stroke-width="1" stroke-dasharray="4 4"/>
+
+      <!-- Ingestion side -->
+      <!-- PDF -->
+      <rect x="30" y="30" width="130" height="44" rx="10" fill="rgba(242,240,234,.04)" stroke="rgba(242,240,234,.14)"/>
+      <text x="95" y="50" text-anchor="middle" class="dlabel">SRD PDF</text>
+      <text x="95" y="63" text-anchor="middle" class="dsub">364 pages</text>
+
+      <!-- Chunker -->
+      <rect x="30" y="120" width="130" height="50" rx="10" fill="rgba(201,126,78,.10)" stroke="rgba(201,126,78,.5)"/>
+      <text x="95" y="142" text-anchor="middle" class="dlabel">Chunker</text>
+      <text x="95" y="155" text-anchor="middle" class="dsub">512 tok · 64 overlap</text>
+      <text x="95" y="165" text-anchor="middle" class="dsub">dedup → 3,435 chunks</text>
+
+      <!-- Embedder -->
+      <rect x="200" y="120" width="150" height="50" rx="10" fill="rgba(201,126,78,.10)" stroke="rgba(201,126,78,.5)"/>
+      <text x="275" y="142" text-anchor="middle" class="dlabel">Embedder</text>
+      <text x="275" y="155" text-anchor="middle" class="dsub">BGE-small-en-v1.5</text>
+      <text x="275" y="165" text-anchor="middle" class="dsub">dense 384d + sparse BM25</text>
+
+      <!-- Qdrant -->
+      <rect x="110" y="230" width="160" height="50" rx="10" fill="rgba(201,126,78,.10)" stroke="rgba(201,126,78,.5)"/>
+      <text x="190" y="253" text-anchor="middle" class="dlabel">Qdrant Cloud</text>
+      <text x="190" y="265" text-anchor="middle" class="dsub">named vectors: dense + sparse</text>
+      <text x="190" y="275" text-anchor="middle" class="dsub">3,435 points</text>
+
+      <!-- Ingestion arrows -->
+      <line x1="95" y1="74" x2="95" y2="118" stroke="#c97e4e" stroke-width="1.4" class="flow" marker-end="url(#ac)"/>
+      <line x1="160" y1="145" x2="198" y2="145" stroke="#c97e4e" stroke-width="1.4" class="flow" marker-end="url(#ac)"/>
+      <line x1="190" y1="170" x2="190" y2="228" stroke="#c97e4e" stroke-width="1.4" class="flow" marker-end="url(#ac)"/>
+      <line x1="95" y1="170" x2="145" y2="228" stroke="#5b574e" stroke-width="1.2" marker-end="url(#a)"/>
+
+      <!-- Query side -->
+      <!-- User query -->
+      <rect x="400" y="30" width="130" height="44" rx="10" fill="rgba(242,240,234,.04)" stroke="rgba(242,240,234,.14)"/>
+      <text x="465" y="50" text-anchor="middle" class="dlabel">User Query</text>
+      <text x="465" y="63" text-anchor="middle" class="dsub">natural language</text>
+
+      <!-- HyDE (optional) -->
+      <rect x="560" y="30" width="130" height="44" rx="10" fill="rgba(242,240,234,.03)" stroke="rgba(242,240,234,.08)" stroke-dasharray="3 3"/>
+      <text x="625" y="50" text-anchor="middle" class="dlabel" style="fill:#5b574e">HyDE</text>
+      <text x="625" y="63" text-anchor="middle" class="dsub">optional hypothesis doc</text>
+
+      <!-- Retriever -->
+      <rect x="400" y="120" width="290" height="50" rx="10" fill="rgba(201,126,78,.10)" stroke="rgba(201,126,78,.5)"/>
+      <text x="545" y="142" text-anchor="middle" class="dlabel">Hybrid Retriever</text>
+      <text x="545" y="155" text-anchor="middle" class="dsub">dense (BGE) + sparse (BM25) → top-10 · RRF fusion</text>
+
+      <!-- Reranker -->
+      <rect x="400" y="210" width="290" height="44" rx="10" fill="rgba(201,126,78,.10)" stroke="rgba(201,126,78,.5)"/>
+      <text x="545" y="230" text-anchor="middle" class="dlabel">Cross-Encoder Reranker</text>
+      <text x="545" y="243" text-anchor="middle" class="dsub">ms-marco-MiniLM-L-6-v2 → top-4</text>
+
+      <!-- LLM -->
+      <rect x="400" y="290" width="290" height="44" rx="10" fill="rgba(201,126,78,.10)" stroke="rgba(201,126,78,.5)"/>
+      <text x="545" y="310" text-anchor="middle" class="dlabel">Llama 3.3 70B (Groq)</text>
+      <text x="545" y="323" text-anchor="middle" class="dsub">streaming SSE → frontend</text>
+
+      <!-- Query arrows -->
+      <line x1="465" y1="74" x2="465" y2="118" stroke="#c97e4e" stroke-width="1.4" class="flow" marker-end="url(#ac)"/>
+      <line x1="545" y1="170" x2="545" y2="208" stroke="#c97e4e" stroke-width="1.4" class="flow" marker-end="url(#ac)"/>
+      <line x1="545" y1="254" x2="545" y2="288" stroke="#c97e4e" stroke-width="1.4" class="flow" marker-end="url(#ac)"/>
+
+      <!-- Qdrant ↔ Retriever -->
+      <line x1="270" y1="255" x2="398" y2="145" stroke="rgba(201,126,78,.45)" stroke-width="1.2" stroke-dasharray="3 4"/>
+      <text x="330" y="195" text-anchor="middle" class="dnote">vector search</text>
+    </svg>
+  </div>
+</section>
+
+<section id="ingestion">
+  <div class="sec-head"><i>02</i><h2>Ingestion pipeline</h2></div>
+  <div class="grid two">
+    <div class="card fade">
+      <dl class="spec">
+        <dt>Source</dt>
+        <dd>D&amp;D 5e 2024 SRD PDF (srd52.pdf)<small>364 pages · auto-downloaded or loaded from disk</small></dd>
+        <dt>Chunking</dt>
+        <dd><code>512</code> tokens · <code>64</code> token overlap<small>RecursiveCharacterTextSplitter on cleaned page text</small></dd>
+        <dt>Deduplication</dt>
+        <dd>SHA-256 hash dedup<small>3,647 raw chunks → 3,435 after removing 212 duplicates</small></dd>
+        <dt>Point IDs</dt>
+        <dd>UUID from SHA-256<small>sha256(text)[:32] cast to uuid.UUID — Qdrant requires UUID or uint</small></dd>
+      </dl>
+    </div>
+    <div class="card fade">
+      <dl class="spec">
+        <dt>Dense embeddings</dt>
+        <dd><code>BAAI/bge-small-en-v1.5</code><small>384-dimension vectors · runs locally on CPU</small></dd>
+        <dt>Sparse embeddings</dt>
+        <dd>BM25-style TF index<small>per-token TF with accumulator dict to prevent duplicate indices</small></dd>
+        <dt>Vector store</dt>
+        <dd>Qdrant Cloud (free tier)<small>named vectors: <code>dense</code> + <code>sparse</code> · eu-west-2 AWS</small></dd>
+        <dt>Upsert</dt>
+        <dd>Batched · idempotent<small>re-running ingest skips existing collection</small></dd>
+      </dl>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:14px">
+    <div class="card story fade"><i>i</i><div><h3>Sparse vector collision fix</h3><p>Hashing tokens to a 100,000-bucket index space causes collisions. The fix: accumulate TF values into a dict keyed by index before converting to lists — so two tokens that hash to the same bucket merge their weights rather than producing a Qdrant validation error for duplicate indices.</p></div></div>
+  </div>
+</section>
+
+<section id="retrieval">
+  <div class="sec-head"><i>03</i><h2>Hybrid retrieval &amp; reranking</h2></div>
+  <div class="grid two">
+    <div class="card fade">
+      <h3 style="font-size:15px;margin-bottom:10px">Two-stage retrieval</h3>
+      <ul class="ops">
+        <li><div><b>Dense search</b> — BGE cosine similarity over 384-d vectors. Strong on semantic meaning: finds chunks that are conceptually similar to the query even without keyword overlap.</div></li>
+        <li><div><b>Sparse search</b> — BM25-style TF index. Strong on exact terminology: critical for rules queries like <em>"Grappled condition"</em> where the precise word matters.</div></li>
+        <li><div><b>RRF fusion</b> — Reciprocal Rank Fusion combines the two ranked lists into a single top-10 shortlist, avoiding the need to tune a score-blending weight.</div></li>
+      </ul>
+    </div>
+    <div class="card fade">
+      <dl class="spec">
+        <dt>Reranker model</dt>
+        <dd><code>cross-encoder/ms-marco-MiniLM-L-6-v2</code><small>cross-attention over (query, chunk) pairs — more accurate than bi-encoder similarity</small></dd>
+        <dt>Rerank input</dt>
+        <dd>Top-10 from hybrid retrieval</dd>
+        <dt>Rerank output</dt>
+        <dd>Top-4 chunks by cross-encoder score<small>passed to the LLM as context</small></dd>
+        <dt>HyDE (optional)</dt>
+        <dd>Hypothetical Document Embeddings<small>LLM generates a hypothetical answer; its embedding is used as the dense query vector — improves recall at cost of +1 LLM call</small></dd>
+      </dl>
+    </div>
+  </div>
+  <div class="grid two" style="margin-top:14px">
+    <div class="card story fade"><i>ii</i><div><h3>Why hybrid retrieval?</h3><p>Pure semantic search misses rules that share vocabulary with unrelated concepts. Pure keyword search misses paraphrased questions. Hybrid captures both — particularly important for a rules corpus where exact terminology is load-bearing.</p></div></div>
+    <div class="card story fade"><i>iii</i><div><h3>qdrant-client 1.18 breaking change</h3><p>The <code>client.search()</code> method was removed in qdrant-client 1.18. Both dense and sparse search now use <code>client.query_points()</code> with a <code>using=</code> parameter to select the named vector — the response is accessed via <code>response.points</code>.</p></div></div>
+  </div>
+</section>
+
+<section id="eval">
+  <div class="sec-head"><i>04</i><h2>RAGAS evaluation</h2></div>
+  <p style="color:var(--faint);font-size:14px;max-width:660px;margin-bottom:24px">10-sample evaluation generated synthetically from the corpus using Llama 3.3 70B, then scored with RAGAS 0.4.x using the same model. Embeddings from <code style="font-family:'JetBrains Mono',monospace;font-size:12px">BAAI/bge-small-en-v1.5</code>.</p>
+  <div class="grid three">
+    <div class="score-card fade">
+      <p class="score-label">Faithfulness</p>
+      <p class="score-value">0.79</p>
+      <div class="score-bar-bg"><div class="score-bar-fill" data-width="79" style="width:0%"></div></div>
+      <p class="score-note">Fraction of claims in the answer that are grounded in the retrieved context. The oracle rarely hallucinates.</p>
+    </div>
+    <div class="score-card fade">
+      <p class="score-label">Answer Relevancy</p>
+      <p class="score-value">0.69</p>
+      <div class="score-bar-bg"><div class="score-bar-fill" data-width="69" style="width:0%"></div></div>
+      <p class="score-note">How directly the answer addresses the question. Score reflects over-verbose answers that contain the right information but add filler.</p>
+    </div>
+    <div class="score-card fade">
+      <p class="score-label">Context Recall</p>
+      <p class="score-value">0.60</p>
+      <div class="score-bar-bg"><div class="score-bar-fill" data-width="60" style="width:0%"></div></div>
+      <p class="score-note">How much of the ground-truth answer is covered by the retrieved chunks. Lower score reflects some retrieval gaps on specific stat lookups.</p>
+    </div>
+  </div>
+  <div class="grid two" style="margin-top:14px">
+    <div class="card story fade"><i>iv</i><div><h3>Synthetic dataset generation</h3><p>30 question–answer pairs were generated by prompting the LLM with random corpus chunks and asking for a specific, answerable rules question plus a ground-truth answer. This avoids the need for manual annotation while remaining grounded in real SRD content.</p></div></div>
+    <div class="card story fade"><i>v</i><div><h3>RAGAS 0.4.x migration</h3><p>RAGAS 0.4 replaced its evaluation API: samples are now <code>SingleTurnSample</code> objects collected into an <code>EvaluationDataset</code>; LLM and embeddings must be wrapped in <code>LangchainLLMWrapper</code> / <code>LangchainEmbeddingsWrapper</code>; and metrics return per-sample lists rather than a single float — requiring <code>np.nanmean</code> for aggregation.</p></div></div>
+  </div>
+</section>
+
+<section id="oracle">
+  <div class="sec-head"><i>05</i><h2>The Oracle</h2></div>
+  <div class="grid two">
+    <div class="card fade">
+      <h3 style="font-size:15px;margin-bottom:10px">Frontend</h3>
+      <ul class="ops">
+        <li><div><b>Dark fantasy design</b> — Cinzel + Crimson Pro typefaces, gold accent palette, parchment tones. Single-page, no framework.</div></li>
+        <li><div><b>Streaming answers</b> — SSE via <code>fetch</code> + <code>ReadableStream</code>. Parses <code>start</code> / <code>token</code> / <code>end</code> events; renders markdown with marked.js as tokens arrive.</div></li>
+        <li><div><b>Quick-lookup chips</b> — 12 common DM questions as one-tap shortcuts across the top of the page.</div></li>
+        <li><div><b>Source citations</b> — collapsible panel per answer showing SRD section, page and rerank score for each retrieved chunk.</div></li>
+      </ul>
+    </div>
+    <div class="card fade">
+      <dl class="spec">
+        <dt>API host</dt>
+        <dd>Railway (Docker)<small>FastAPI + uvicorn · auto-redeploys on push · <code>ON_FAILURE</code> restart policy</small></dd>
+        <dt>Frontend host</dt>
+        <dd>GitHub Pages<small>served from <code>/docs</code> on the <code>main</code> branch</small></dd>
+        <dt>LLM</dt>
+        <dd>Llama 3.3 70B via Groq<small>free-tier inference · ~10–15s latency without HyDE</small></dd>
+        <dt>Vector store</dt>
+        <dd>Qdrant Cloud free tier<small>eu-west-2 · persistent across Railway redeploys</small></dd>
+      </dl>
+    </div>
+  </div>
+  <div class="card fade" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+    <div>
+      <h3 style="font-size:16px">Try the Oracle</h3>
+      <p style="font-size:13px;color:var(--faint);margin-top:5px;max-width:500px">Ask any D&amp;D 5e 2024 rules question — grappling, spell slots, conditions, actions — and get a cited answer sourced from the SRD.</p>
+    </div>
+    <a href="https://ray98872.github.io/dnd-rag/" target="_blank" rel="noreferrer"
+       style="display:inline-flex;align-items:center;gap:8px;background:var(--copper);color:#120d00;padding:10px 20px;border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;text-decoration:none;transition:filter .2s;white-space:nowrap"
+       onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+      Open Oracle
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <p>© <span id="y">2026</span> Ray Mahbub · D&amp;D 5e Rules Oracle</p>
+  <p>
+    <a href="https://ray98872.github.io">← back to site</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/ray98872/dnd-rag" target="_blank" rel="noreferrer">github</a>
+    &nbsp;·&nbsp;
+    <a href="https://ray98872.github.io/dnd-rag/" target="_blank" rel="noreferrer">live oracle</a>
+  </p>
+</footer>
+
+</div>
+<script>
+document.getElementById("y").textContent = new Date().getFullYear();
+
+// Animate score bars when they scroll into view
+const bars = document.querySelectorAll(".score-bar-fill");
+const barObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.width = e.target.dataset.width + "%";
+      barObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+bars.forEach(b => barObs.observe(b));
+
+// Fade-in on scroll
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const io = new IntersectionObserver((es) => {
+    es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".fade").forEach((el) => io.observe(el));
+} else {
+  document.querySelectorAll(".fade").forEach((el) => el.classList.add("in"));
+  bars.forEach(b => b.style.width = b.dataset.width + "%");
+}
+</script>
+</body>
+</html>
