@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&D RAG — RAGAS Evaluation Report</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f1117; color: #e2e8f0; padding: 2rem; }
+  h1 { font-size: 1.8rem; margin-bottom: 0.25rem; color: #f8fafc; }
+  .subtitle { color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .card { background: #1e2130; border-radius: 12px; padding: 1.5rem; border: 1px solid #2d3748; }
+  .card h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 0.5rem; }
+  .card .score { font-size: 2.5rem; font-weight: 700; color: #f59e0b; }
+  .bar-bg { height: 6px; background: #2d3748; border-radius: 3px; margin-top: 0.75rem; }
+  .bar-fill { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  table { width: 100%; border-collapse: collapse; background: #1e2130; border-radius: 12px; overflow: hidden; }
+  th { background: #2d3748; padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid #2d3748; font-size: 0.85rem; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .q { color: #a5b4fc; font-weight: 500; }
+  .a { color: #e2e8f0; }
+  .gt { color: #86efac; }
+  .tag { display: inline-block; background: #2d3748; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-right: 0.25rem; }
+</style>
+</head>
+<body>
+<h1>🐉 D&D 5e 2024 SRD — RAG Evaluation Report</h1>
+<p class="subtitle">Generated 2026-06-14 10:42 UTC &nbsp;·&nbsp; 10 samples &nbsp;·&nbsp; Model: llama-3.3-70b-versatile</p>
+
+<div class="metrics">
+  <div class="card">
+    <h3>Faithfulness</h3>
+    <div class="score">0.79</div>
+    <div class="bar-bg"><div class="bar-fill" style="width:79%"></div></div>
+  </div>
+  <div class="card">
+    <h3>Answer Relevancy</h3>
+    <div class="score">0.69</div>
+    <div class="bar-bg"><div class="bar-fill" style="width:69%"></div></div>
+  </div>
+  <div class="card">
+    <h3>Context Recall</h3>
+    <div class="score">0.60</div>
+    <div class="bar-bg"><div class="bar-fill" style="width:60%"></div></div>
+  </div>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>#</th>
+  <th>Question</th>
+  <th>Generated Answer</th>
+  <th>Ground Truth</th>
+  <th>Context chunks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td class="q">What is the ghost's saving throw modifier for Wisdom?</td>
+  <td class="a">The provided context does not contain enough information to answer the question about the ghost's saving throw modifier for Wisdom. The context only mentions the DC for the Wisdom saving throw (DC 13) in the Horrific Visage ability, but it does not provide the ghost's Wisdom saving throw modifier. (</td>
+  <td class="gt">+1</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td class="q">At what Monk level can I first use the Slow Fall feature?</td>
+  <td class="a">According to the provided context, you can first use the Slow Fall feature at Monk level 4. 
+As stated in the context: "Level 4: Slow Fall You can take a Reaction when you fall to reduce any damage you take from the fall by an amount equal to five times your Monk level." (Section: Introduction | Pag</td>
+  <td class="gt">Level 4</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td class="q">If I have Advantage on an ability check and roll two d20s, can I reroll both dice if I have an ability that lets me reroll a d20?</td>
+  <td class="a">According to the SRD, Section: Introduction | Page 8, 
+"When you have Advantage or Disadvantage and something in the game lets you reroll or replace the d20, you can reroll or replace only one die, not both. You choose which one."
+
+This means that if you have Advantage on an ability check and roll t</td>
+  <td class="gt">No, you can only reroll or replace one of the dice.</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td class="q">What is the Armor Class (AC) of a Warrior Infantry?</td>
+  <td class="a">The provided context passages do not contain enough information to determine the Armor Class (AC) of a Warrior Infantry. The passages provide general information about Armor Class, its calculation, and how it can be modified, but they do not mention a specific "Warrior Infantry" or its AC.
+
+To deter</td>
+  <td class="gt">13</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>5</td>
+  <td class="q">Can a familiar attack enemies in combat?</td>
+  <td class="a">According to the provided context passages from the SRD:
+
+* From [1] Section: Introduction | Page 130, it is stated that "A familiar can’t attack, but it can take other actions as normal."
+* However, from [2] Section: Introduction | Page 73, it is mentioned that the familiar has a "Quick Attack" fea</td>
+  <td class="gt">No</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td class="q">Can a creature be affected by the spell's radiant damage multiple times in the same turn if it moves in and out of the Cylinder?</td>
+  <td class="a">According to the provided context passages, the answer is no. As stated in [1] Section: Introduction | Page 118: 
+"A creature can be affected by this spell only once per turn."
+
+This rule suggests that regardless of how many times a creature moves in and out of the Cylinder, it can only be affected </td>
+  <td class="gt">No, a creature can be affected by this spell only once per turn.</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td class="q">What action does a creature created by this spell take if I issue no commands to it?</td>
+  <td class="a">According to the provided context passages from the SRD, if you issue no commands to a creature created by this spell, it takes the Dodge action and moves only to avoid harm.
+
+This is stated in:
+- Section: Introduction | Page 109: "If you issue no commands, the creature takes the Dodge action and mo</td>
+  <td class="gt">It takes the Dodge action and moves only to avoid harm.</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td class="q">At what level can a sorcerer use up to two Metamagic options on each spell they cast?</td>
+  <td class="a">According to the provided context, there is no information that suggests a sorcerer can use up to two Metamagic options on each spell they cast at any level. 
+
+The text from [1] Section: Introduction | Page 66 states: 
+"You can use only one Metamagic option on a spell when you cast it unless otherwi</td>
+  <td class="gt">Level 7</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>9</td>
+  <td class="q">Can a vampire's familiar be charmed by anyone other than its vampire master?</td>
+  <td class="a">According to the provided context from the SRD, specifically Section: Mod Save | Page 334:
+"Immunities Charmed (except from its vampire master)"
+
+This indicates that the familiar is immune to being charmed, except when the charming attempt is made by its vampire master. 
+
+Therefore, the answer is no</td>
+  <td class="gt">No, the familiar is immune to being charmed except by its vampire master.</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td class="q">How much necrotic damage does a creature take if it fails its Constitution saving throw against this spell at level 6?</td>
+  <td class="a">Based on the provided context, there are multiple spells that deal necrotic damage. To answer the question, we need to know which specific spell is being referred to. 
+
+From the given options:
+- The first spell ([1] Section: Introduction | Page 46) deals 2d6 Necrotic damage at level 6, increasing to</td>
+  <td class="gt">2d6</td>
+  <td><span class="tag">4 chunks</span></td>
+</tr>
+
+</tbody>
+</table>
+</body>
+</html>

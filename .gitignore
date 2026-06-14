@@ -21,6 +21,7 @@ data/processed/
 
 # Eval outputs
 eval_results/
+!docs/eval_results/
 
 # Model cache (sentence-transformers downloads here)
 .cache/
@@ -33,5 +34,3 @@ qdrant_storage/
 notebooks/.ipynb_checkpoints/
 
 # OS
-.DS_Store
-Thumbs.db

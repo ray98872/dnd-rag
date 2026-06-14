@@ -288,7 +288,7 @@ footer a:hover{color:var(--copper-soft)}
 
 <section id="eval">
   <div class="sec-head"><i>04</i><h2>RAGAS evaluation</h2></div>
-  <p style="color:var(--faint);font-size:14px;max-width:660px;margin-bottom:24px">10-sample evaluation generated synthetically from the corpus using Llama 3.3 70B, then scored with RAGAS 0.4.x using the same model. Embeddings from <code style="font-family:'JetBrains Mono',monospace;font-size:12px">BAAI/bge-small-en-v1.5</code>.</p>
+  <p style="color:var(--faint);font-size:14px;max-width:660px;margin-bottom:24px">10-sample evaluation generated synthetically from the corpus using Llama 3.3 70B, then scored with RAGAS 0.4.x using the same model. Embeddings from <code style="font-family:'JetBrains Mono',monospace;font-size:12px">BAAI/bge-small-en-v1.5</code>. <a href="eval_results/report.html" target="_blank" style="color:var(--copper);text-decoration:none;border-bottom:1px solid rgba(201,126,78,0.35);padding-bottom:1px;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(201,126,78,0.8)'" onmouseout="this.style.borderColor='rgba(201,126,78,0.35)'">View full report →</a></p>
   <div class="grid three">
     <div class="score-card fade">
       <p class="score-label">Faithfulness</p>
@@ -384,13 +384,4 @@ bars.forEach(b => barObs.observe(b));
 // Fade-in on scroll
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   const io = new IntersectionObserver((es) => {
-    es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-  }, { threshold: 0.12 });
-  document.querySelectorAll(".fade").forEach((el) => io.observe(el));
-} else {
-  document.querySelectorAll(".fade").forEach((el) => el.classList.add("in"));
-  bars.forEach(b => b.style.width = b.dataset.width + "%");
-}
-</script>
-</body>
-</html>
+    es.forEach((e) => { if (e.isIntersecti
