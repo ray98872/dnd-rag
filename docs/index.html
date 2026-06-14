@@ -374,8 +374,11 @@
       max-height: 150px;
       line-height: 1.5;
       outline: none;
+      overflow: hidden;
+      scrollbar-width: none;
       transition: border-color 0.15s;
     }
+    #question::-webkit-scrollbar { display: none; }
     #question:focus { border-color: var(--gold-dim); }
     #question::placeholder { color: var(--muted); }
     #question:disabled { opacity: 0.5; }
@@ -654,9 +657,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Quick chips ───────────────────────────────────────────────────────────────
 function buildChips() {
   const bar = document.getElementById('chips-bar');
-  bar.innerHTML = CHIPS.map(q =>
-    `<button class="chip" onclick="chipClick(${JSON.stringify(q)})">${q}</button>`
-  ).join('');
+  bar.innerHTML = '';
+  CHIPS.forEach(q => {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.textContent = q;
+    btn.addEventListener('click', () => chipClick(q));
+    bar.appendChild(btn);
+  });
 }
 
 function chipClick(q) {
